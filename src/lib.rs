@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_very_simple() {
 
-        let mut store = Store::<ExampleModel>::new(ExampleModel { foo: 12, bar: 20});
+        let mut store = Store::new(ExampleModel { foo: 12, bar: 20});
         assert_eq!(12, store.get_foo());
         assert_eq!(20, store.get_bar());
     }

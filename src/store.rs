@@ -11,7 +11,7 @@ pub trait Store {
     fn forget_previous_gets(&mut self);
 }
 
-impl<S, T> GenericStore<T> for S where S: Store {}
+impl<S: Store, T> GenericStore<T> for S {}
 
 pub trait GenericStore<T>: Store {
 

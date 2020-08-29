@@ -10,7 +10,7 @@ impl<M> ReadTracker<M> {
 
     pub fn new(set: &PropertySet<M>) -> Self {
         ReadTracker {
-            read_properties: Vec::with_capacity(set.amount as usize),
+            read_properties: vec![false; set.amount as usize],
             phantom: PhantomData
         }
     }

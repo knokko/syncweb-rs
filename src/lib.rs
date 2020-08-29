@@ -85,8 +85,10 @@ mod tests {
     }
 
     #[test]
-    fn test_direct() {
+    fn test_very_simple() {
 
-        let store = DirectExampleStore::new(12, 20);
+        let mut store = DirectExampleStore::new(12, 20);
+        assert_eq!(12, store.get_foo());
+        assert_eq!(20, store.get_bar());
     }
 }

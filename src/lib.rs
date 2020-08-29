@@ -1,12 +1,12 @@
 #![feature(const_fn, fn_traits)]
 
-mod store;
 mod model;
 mod property;
+mod store;
 
-pub use store::*;
 pub use model::*;
 pub use property::*;
+pub use store::*;
 
 #[cfg(test)]
 mod tests {
@@ -15,17 +15,15 @@ mod tests {
 
     use std::cell::Cell;
     use std::rc::Rc;
-    
-    struct ExampleModel {
 
+    struct ExampleModel {
         foo: u32,
-        bar: u32
+        bar: u32,
     }
 
     struct ExampleID {}
 
     impl Model for ExampleModel {
-
         type ID = ExampleID;
 
         fn get_properties(&self) -> &'static PropertySet<ExampleID> {
@@ -35,16 +33,15 @@ mod tests {
 
     const PROPERTY_FOO: TrackingProperty<ExampleModel, u32> = TrackingProperty::first(
         &|example: &ExampleModel| example.foo,
-        &|example: &mut ExampleModel, new_foo| example.foo = new_foo
+        &|example: &mut ExampleModel, new_foo| example.foo = new_foo,
     );
     const PROPERTY_BAR: TrackingProperty<ExampleModel, u32> = PROPERTY_FOO.next(
         &|example: &ExampleModel| example.bar,
-        &|example: &mut ExampleModel, new_bar| example.bar = new_bar
+        &|example: &mut ExampleModel, new_bar| example.bar = new_bar,
     );
     const PROPERTIES_EXAMPLE: PropertySet<ExampleID> = PROPERTY_BAR.finish_set();
 
     trait ExampleStore {
-
         fn get_foo(&mut self) -> u32;
 
         fn get_bar(&mut self) -> u32;
@@ -55,7 +52,6 @@ mod tests {
     }
 
     impl ExampleStore for Store<ExampleModel> {
-
         fn get_foo(&mut self) -> u32 {
             self.get(&PROPERTY_FOO)
         }
@@ -75,13 +71,12 @@ mod tests {
 
     #[test]
     fn test_receive() {
-
         let count_cell = Rc::new(Cell::new(0));
         let ref_count_cell = Rc::clone(&count_cell);
 
         let mut store = Store::new(
-            ExampleModel { foo: 12, bar: 20},
-            Box::new(move || ref_count_cell.set(ref_count_cell.get() + 1))
+            ExampleModel { foo: 12, bar: 20 },
+            Box::new(move || ref_count_cell.set(ref_count_cell.get() + 1)),
         );
 
         // Initially, the values should be as received in the constructor
@@ -92,7 +87,7 @@ mod tests {
 
         // We now change the value of `foo` from the 'outside'
         store.receive_foo(6);
-        // This should cause `get_foo` to return the new value 
+        // This should cause `get_foo` to return the new value
         assert_eq!(6, store.get_foo());
         // And the on_change function should have been called once
         assert_eq!(1, count_cell.get());

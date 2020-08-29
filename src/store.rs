@@ -1,7 +1,6 @@
 use crate::*;
 
 pub struct Store<M: Model> {
-
     model: M,
 
     // When the user/client of this Store reads from it
@@ -10,11 +9,10 @@ pub struct Store<M: Model> {
     // When an external entity changes the properties of the model of this Store
     did_receive_change: bool,
     change_tracker: PropertyStateMap<M::ID, bool>,
-    on_receive_change: Box<dyn FnMut()>
+    on_receive_change: Box<dyn FnMut()>,
 }
 
 impl<M: Model<ID = I>, I: 'static> Store<M> {
-
     pub fn new(initial_values: M, on_receive_change: Box<dyn FnMut()>) -> Self {
         let properties = initial_values.get_properties();
         Self {
@@ -23,7 +21,7 @@ impl<M: Model<ID = I>, I: 'static> Store<M> {
 
             did_receive_change: false,
             change_tracker: PropertyStateMap::new(properties, &false),
-            on_receive_change
+            on_receive_change,
         }
     }
 

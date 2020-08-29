@@ -9,23 +9,27 @@ pub struct Store<M: Model> {
 
     // When an external entity changes the properties of the model of this Store
     did_receive_change: bool,
+    change_tracker: PropertyStateMap<M::ID, bool>,
     on_receive_change: Box<dyn FnMut()>
 }
 
 impl<M: Model<ID = I>, I: 'static> Store<M> {
 
     pub fn new(initial_values: M, on_receive_change: Box<dyn FnMut()>) -> Self {
+        let properties = initial_values.get_properties();
         Self {
-            read_tracker: PropertyStateMap::new(initial_values.get_properties(), &false),
+            read_tracker: PropertyStateMap::new(properties, &false),
             model: initial_values,
 
             did_receive_change: false,
+            change_tracker: PropertyStateMap::new(properties, &false),
             on_receive_change
         }
     }
 
     pub fn forget_tracking_state(&mut self) {
         self.read_tracker.fill(&false);
+        self.change_tracker.fill(&false);
         self.did_receive_change = false;
     }
 
@@ -39,7 +43,12 @@ impl<M: Model<ID = I>, I: 'static> Store<M> {
             self.did_receive_change = true;
             self.on_receive_change.as_mut()();
         }
+        self.change_tracker.set_state(property, &true);
         property.set_value(&mut self.model, new_value);
+    }
+
+    pub fn received_change<T>(&mut self, property: &TrackingProperty<M, T>) -> bool {
+        self.change_tracker.get_state(property)
     }
 
     // TODO Add send_change

@@ -2,11 +2,11 @@
 
 mod store;
 mod model;
-mod tracking;
+mod property;
 
 pub use store::*;
 pub use model::*;
-pub use tracking::*;
+pub use property::*;
 
 #[cfg(test)]
 mod tests {

@@ -5,7 +5,7 @@ pub struct Store<M: Model> {
     model: M,
 
     // When the user/client of this Store reads from it
-    tracker: ReadTracker<M::ID>,
+    read_tracker: PropertyStateMap<M::ID, bool>,
 
     // When an external entity changes the properties of the model of this Store
     did_receive_change: bool,
@@ -16,7 +16,7 @@ impl<M: Model<ID = I>, I: 'static> Store<M> {
 
     pub fn new(initial_values: M, on_receive_change: Box<dyn FnMut()>) -> Self {
         Self {
-            tracker: ReadTracker::new(initial_values.get_properties()),
+            read_tracker: PropertyStateMap::new(initial_values.get_properties(), &false),
             model: initial_values,
 
             did_receive_change: false,
@@ -25,12 +25,12 @@ impl<M: Model<ID = I>, I: 'static> Store<M> {
     }
 
     pub fn forget_tracking_state(&mut self) {
-        self.tracker.forget_read_properties();
+        self.read_tracker.fill(&false);
         self.did_receive_change = false;
     }
 
     pub fn get<T>(&mut self, property: &TrackingProperty<M, T>) -> T {
-        self.tracker.read_property(property);
+        self.read_tracker.set_state(property, &true);
         property.get_value(&self.model)
     }
 

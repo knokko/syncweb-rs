@@ -19,8 +19,15 @@ mod tests {
         bar: u32
     }
 
+    struct ExampleID {}
+
     impl Model for ExampleModel {
 
+        type ID = ExampleID;
+
+        fn get_properties(&self) -> &'static PropertySet<ExampleID> {
+            &PROPERTIES_EXAMPLE
+        }
     }
 
     const PROPERTY_FOO: TrackingProperty<ExampleModel, u32> = TrackingProperty::first(
@@ -31,49 +38,16 @@ mod tests {
         &|example: &ExampleModel| example.bar,
         &|example: &mut ExampleModel, new_bar| example.bar = new_bar
     );
-    const PROPERTIES_EXAMPLE: PropertySet<ExampleModel> = PROPERTY_BAR.finish_set();
+    const PROPERTIES_EXAMPLE: PropertySet<ExampleID> = PROPERTY_BAR.finish_set();
 
-    trait ExampleStore : Store {
+    trait ExampleStore {
 
         fn get_foo(&mut self) -> u32;
 
         fn get_bar(&mut self) -> u32;
     }
 
-    struct DirectExampleStore {
-
-        model: ExampleModel,
-        tracker: ReadTracker<ExampleModel>,
-    }
-
-    impl DirectExampleStore {
-
-        pub fn new(foo: u32, bar: u32) -> Self {
-            Self {
-                model: ExampleModel { foo, bar },
-                tracker: ReadTracker::new(&PROPERTIES_EXAMPLE)
-            }
-        }
-    }
-
-    impl Store for DirectExampleStore {
-
-        type ModelType = ExampleModel;
-
-        fn forget_previous_gets(&mut self) {
-            self.tracker.forget_read_properties();
-        }
-
-        fn get_model(&mut self) -> &mut ExampleModel {
-            &mut self.model
-        }
-
-        fn get_tracker(&mut self) -> &mut ReadTracker<ExampleModel> {
-            &mut self.tracker
-        }
-    }
-
-    impl ExampleStore for DirectExampleStore {
+    impl ExampleStore for Store<ExampleModel> {
 
         fn get_foo(&mut self) -> u32 {
             self.get(&PROPERTY_FOO)
@@ -87,7 +61,7 @@ mod tests {
     #[test]
     fn test_very_simple() {
 
-        let mut store = DirectExampleStore::new(12, 20);
+        let mut store = Store::<ExampleModel>::new(ExampleModel { foo: 12, bar: 20});
         assert_eq!(12, store.get_foo());
         assert_eq!(20, store.get_bar());
     }

@@ -1,25 +1,27 @@
+use crate::*;
+
 use std::marker::PhantomData;
 
-pub struct ReadTracker<M> {
+pub struct ReadTracker<I> {
 
     read_properties: Vec<bool>,
-    phantom: PhantomData<M>
+    phantom: PhantomData<I>
 }
 
-impl<M> ReadTracker<M> {
+impl<I: 'static> ReadTracker<I> {
 
-    pub fn new(set: &PropertySet<M>) -> Self {
+    pub fn new(set: &PropertySet<I>) -> Self {
         ReadTracker {
             read_properties: vec![false; set.amount as usize],
             phantom: PhantomData
         }
     }
 
-    pub fn read_property<T>(&mut self, property: &TrackingProperty<M, T>) {
+    pub fn read_property<T, M: Model<ID = I>>(&mut self, property: &TrackingProperty<M, T>) {
         self.read_properties[property.index as usize] = true;
     }
 
-    pub fn was_property_read<T>(&self, property: &TrackingProperty<M, T>) -> bool {
+    pub fn was_property_read<T, M: Model<ID = I>>(&self, property: &TrackingProperty<M, T>) -> bool {
         self.read_properties[property.index as usize]
     }
 
@@ -43,7 +45,7 @@ pub struct TrackingProperty<M: 'static, T: 'static> {
     phantom: PhantomData<M>
 }
 
-impl<M, T> TrackingProperty<M, T> {
+impl<M: Model, T> TrackingProperty<M, T> {
 
     const fn new(index: u16, get: Getter<M, T>, set: Setter<M, T>) -> Self {
         Self {
@@ -62,7 +64,7 @@ impl<M, T> TrackingProperty<M, T> {
         TrackingProperty::new(self.index + 1, getter, setter)
     }
 
-    pub const fn finish_set(&self) -> PropertySet<M> {
+    pub const fn finish_set(&self) -> PropertySet<M::ID> {
         PropertySet {
             amount: self.index + 1,
             phanton: PhantomData

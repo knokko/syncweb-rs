@@ -1,26 +1,31 @@
 use crate::*;
 
-pub trait Store {
+pub struct Store<M: Model> {
 
-    type ModelType;
-
-    fn get_model(&mut self) -> &mut Self::ModelType;
-
-    fn get_tracker(&mut self) -> &mut ReadTracker<Self::ModelType>;
-
-    fn forget_previous_gets(&mut self);
+    model: M,
+    tracker: ReadTracker<M::ID>
 }
 
-impl<S: Store, T> GenericStore<T> for S {}
+impl<M: Model<ID = I>, I: 'static> Store<M> {
 
-pub trait GenericStore<T>: Store {
-
-    fn get(&mut self, property: &TrackingProperty<Self::ModelType, T>) -> T {
-        self.get_tracker().read_property(property);
-        property.get_value(self.get_model())
+    pub fn new(initial_values: M) -> Self {
+        Self {
+            tracker: ReadTracker::new(initial_values.get_properties()),
+            model: initial_values,
+        }
     }
 
-    fn set(&mut self, property: &TrackingProperty<Self::ModelType, T>, new_value: T) {
-        property.set_value(self.get_model(), new_value);
+    pub fn forget_previous_gets(&mut self) {
+        self.tracker.forget_read_properties();
+    }
+
+    pub fn get<T>(&mut self, property: &TrackingProperty<M, T>) -> T {
+        self.tracker.read_property(property);
+        property.get_value(&self.model)
+    }
+
+    // TODO Think about how to support syncing of set operations
+    pub fn set<T>(&mut self, property: &TrackingProperty<M, T>, new_value: T) {
+        property.set_value(&mut self.model, new_value);
     }
 }

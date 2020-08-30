@@ -37,15 +37,17 @@ impl<M: Model<ID = I>, I: 'static> Store<M> {
     }
 
     pub fn receive_change<T>(&mut self, property: &TrackingProperty<M, T>, new_value: T) {
-        if !self.did_receive_change {
-            self.did_receive_change = true;
-            self.on_receive_change.as_mut()();
+        if self.read_tracker.get_state(property) {
+            if !self.did_receive_change {
+                self.did_receive_change = true;
+                self.on_receive_change.as_mut()();
+            }
+            self.change_tracker.set_state(property, &true);
+            property.set_value(&mut self.model, new_value);
         }
-        self.change_tracker.set_state(property, &true);
-        property.set_value(&mut self.model, new_value);
     }
 
-    pub fn received_change<T>(&mut self, property: &TrackingProperty<M, T>) -> bool {
+    pub fn received_change<T>(&self, property: &TrackingProperty<M, T>) -> bool {
         self.change_tracker.get_state(property)
     }
 
